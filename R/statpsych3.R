@@ -77,8 +77,8 @@ ci.prop1 <- function(alpha, f, n) {
 #' @description
 #' Computes adjusted Wald confidence intervals for pairwise proportion
 #' differences of a polychotomous variable. These adjusted Wald confidence
-#' intervals use the same method that is used to compare proportions in a 
-#' paired-samples design.
+#' intervals use the same method that is used to compare the two proportions
+#' in a paired-samples design.
 #'
 #'
 #' @param   alpha   alpha level for 1-alpha confidence
@@ -145,8 +145,8 @@ ci.pairs.prop1 <-function(alpha, f) {
 #' @param   alpha   alpha level for 1-alpha confidence
 #' @param   f1      number of participants in group 1 who have the attribute
 #' @param   f2      number of participants in group 2 who have the attribute
-#' @param   n1      sample size of group 1
-#' @param   n2      sample size of group 2
+#' @param   n1      sample size for group 1
+#' @param   n2      sample size for group 2
 #'
 #'
 #' @return
@@ -196,13 +196,13 @@ ci.prop2 <- function(alpha, f1, f2, n1, n2) {
 #' @param   alpha   alpha level for 1-alpha confidence
 #' @param   f1      number of participants in group 1 who have the attribute
 #' @param   f2      number of participants in group 2 who have the attribute
-#' @param   n1      sample size of group 1
-#' @param   n2      sample size of group 2
+#' @param   n1      sample size for group 1
+#' @param   n2      sample size for group 2
 #'
 #'
 #' @return
 #' Returns a 1-row matrix. The columns are:
-#' * Estimate - adjusted ratio of proportion ratio
+#' * Estimate - adjusted estimate of proportion ratio
 #' * LL - lower limit of the adjusted Wald confidence interval
 #' * UL - upper limit of the adjusted Wald confidence interval
 #'
@@ -309,7 +309,7 @@ ci.lc.prop.bs <- function(alpha, f, n, v) {
 #'
 #'
 #' @param   alpha   alpha level for simultaneous 1-alpha confidence
-#' @param   f       vector of frequency counts of participants with attribute
+#' @param   f       vector of frequency counts of participants who have the attribute
 #' @param   n       vector of sample sizes
 #'
 #'
@@ -364,12 +364,14 @@ ci.pairs.prop.bs <-function(alpha, f, n) {
 
 
 #  ci.slope.prop.bs ========================================================== 
-#' Confidence interval for a slope of a quantitative between-subjects factor
+#' Confidence interval for a slope of a proportion in a single-factor design
+#' with a quantitative between-subjects factor
 #'
 #'
 #' @description
-#' Computes an adjusted Wald confidence interval for the slope of a 
-#' quantitative between-subjects factor using contrast coefficients. 
+#' Computes a test statistic and an adjusted Wald confidence interval for the 
+#' slope of proportions in a single-factor design with a quantitative 
+#' between-subjects factor. 
 #'
 #'
 #' @param   alpha   alpha level for 1-alpha confidence
@@ -421,6 +423,73 @@ ci.slope.prop.bs <- function(alpha, f, n, x) {
  UL <- slope + z*se
  out <- t(c(slope, se, t, pval, LL, UL))
  colnames(out) <- c("Estimate", "SE", "z", "p", "LL", "UL")
+ return(out)
+}
+
+
+#  test.mono.prop.bs ============================================================
+#' Test of monotonic trend in proportions for an ordered between-subjects
+#' factor
+#'
+#'
+#' @description
+#' Computes simultaneous confidence intervals for all adjacent pairwise
+#' comparisons of population proportions using frequency counts and
+#' samples sizes as input. If one or more lower limits are greater than
+#' 0 and no upper limit is less than 0, then conclude that the population
+#' proportions are monotoic decreasing. If one or more upper limits are 
+#' less than 0 and no lower limits are greater than 0, then conclude that
+#' the population proportions are monotoic increasing. Reject the hypothesis
+#' of a monotonic trend if any lower limit is greater than 0 and any upper 
+#' limit is less than 0. 
+#'
+#'
+#' @param  alpha   alpha level for simultaneous 1-alpha confidence
+#' @param  f       vector of frequency counts of participants who have the attribute
+#' @param  n       vector of sample sizes
+#'
+#'
+#' @return 
+#' Returns a matrix with the number of rows equal to the number
+#' of adjacent pairwise comparisons. The columns are:
+#' * Estimate - estimated proportion difference
+#' * SE - standard error
+#' * LL - one-sided lower limit of the confidence interval
+#' * UL - one-sided upper limit of the confidence interval
+#'
+#'
+#' @examples
+#' f <- c(67, 49, 30, 10)
+#' n <- c(100, 100, 100, 100)
+#' test.mono.prop.bs(.05, f, n)
+#'
+#' # Should return:
+#' #      Estimate         SE         LL        UL
+#' # 1 2 0.1764706 0.06803446 0.01359747 0.3393437
+#' # 2 3 0.1862745 0.06726135 0.02525219 0.3472968
+#' # 3 4 0.1960784 0.05493010 0.06457688 0.3275800
+#'
+#'
+#' @importFrom stats qnorm
+#' @export
+test.mono.prop.bs <-function(alpha, f, n) {
+ a <- length(f)
+ p.adj <- (f + 1)/(n + 2)
+ v <- p.adj*(1 - p.adj)/(n + 2)
+ p1 <- p.adj[1: a - 1]
+ p2 <- p.adj[2: a]
+ Estimate <- p1 - p2
+ v1 <- v[1: a - 1]
+ v2 <- v[2: a]
+ n1 <- n[1: a - 1]
+ n2 <- n[2: a]
+ SE <- sqrt(v1 + v2)
+ zcrit <- qnorm(1 - alpha/(2*(a - 1)))
+ LL <- Estimate - zcrit*SE
+ UL <- Estimate + zcrit*SE
+ pair <- cbind(seq(1, a - 1), seq(2, a))
+ out <- cbind(pair, Estimate, SE, LL, UL)
+ rownames(out) <- rep("", a - 1)
  return(out)
 }
 
@@ -554,18 +623,18 @@ ci.ratio.prop.ps <- function(alpha, f00, f10, f01, f11) {
 #'
 #' @description
 #' Computes confidence intervals and test statistics for population 
-#' conditional slopes (simple slopes) in a general linear model that
+#' conditional slopes (simple slopes) in a logistic model that
 #' includes a predictor variable that is the product of a moderator 
 #' variable and a predictor variable. Conditional slopes are computed 
 #' at low and high values of the moderator variable. 
 #'
 #'
 #' @param  alpha  alpha level for 1-alpha confidence
-#' @param  b1     sample coefficient for predictor variable
-#' @param  b2     sample coefficient for product variable
+#' @param  b1     estimated slope coefficient for predictor variable
+#' @param  b2     estimated slope coefficient for product variable
 #' @param  se1    standard error for predictor coefficient
 #' @param  se2    standard error for product coefficient
-#' @param  cov    sample covariance between predictor and product coefficients
+#' @param  cov    estimated covariance between predictor and product coefficients
 #' @param  lo     low value of moderator variable 
 #' @param  hi     high value of moderator variable 
 #'
@@ -721,11 +790,11 @@ ci.yule <- function(alpha, f00, f01, f10, f11) {
 
 
 #  ci.phi ====================================================================
-#' Confidence interval for a phi coefficient
+#' Confidence interval for a phi correlation
 #'
 #'
 #' @description
-#' Computes a confidence interval for a phi coefficient. This function requires 
+#' Computes a confidence interval for a phi correlation. This function requires 
 #' the frequency counts from a 2 x 2 contingency table for two dichotomous 
 #' variables. This measure of association assumes that both dichotomous  
 #' variables are naturally dichotomous.
@@ -740,7 +809,7 @@ ci.yule <- function(alpha, f00, f01, f10, f11) {
 #'
 #' @return
 #' Returns a 1-row matrix. The columns are:
-#' * Estimate - estimate of phi coefficient
+#' * Estimate - estimate of phi correlation
 #' * SE - standard error
 #' * LL - lower limit of the confidence interval
 #' * UL - upper limit of the confidence interval
@@ -781,11 +850,11 @@ ci.phi <- function(alpha, f00, f01, f10, f11) {
 
 
 #  ci.biphi ==================================================================
-#' Confidence interval for a biserial-phi coefficient
+#' Confidence interval for a biserial-phi correlation
 #'
 #'
 #' @description
-#' Computes a confidence interval for a biserial-phi coefficient using a
+#' Computes a confidence interval for a biserial-phi correlation using a
 #' transformation of a confidence interval for an odds ratio with .5 added to
 #' each cell frequency. This measure of association assumes the group variable
 #' is naturally dichotomous and the response variable is artificially
@@ -795,13 +864,13 @@ ci.phi <- function(alpha, f00, f01, f10, f11) {
 #' @param   alpha  alpha level for 1-alpha confidence
 #' @param   f1     number of participants in group 1 who have the attribute
 #' @param   f2     number of participants in group 2 who have the attribute
-#' @param   n1     sample size of group 1
-#' @param   n2     sample size of group 2
+#' @param   n1     sample size for group 1
+#' @param   n2     sample size for group 2
 #'
 #'
 #' @return
 #' Returns a 1-row matrix. The columns are:
-#' * Estimate - estimate of phi coefficient
+#' * Estimate - estimate of biserial-phi correlation
 #' * SE - standard error
 #' * LL - lower limit of the confidence interval
 #' * UL - upper limit of the confidence interval
@@ -915,7 +984,7 @@ ci.tetra <- function(alpha, f00, f01, f10, f11) {
 #' @description
 #' Computes a confidence interval for the intraclass kappa coefficient and
 #' Cohen's kappa coefficient for two dichotomous ratings. Both measures
-#' are intraclass reliability coefficients. 
+#' are intraclass reliability coefficients.
 #'
 #'
 #' @param   alpha  alpha level for 1-alpha confidence
@@ -1022,6 +1091,78 @@ ci.agree <- function(alpha, n, f, k) {
  UL.g <- a*(p.adj + z*sqrt(p.adj*(1 - p.adj)/(n + 4))) - 1/(k - 1) 
  out <- t(c(g.mle, se.g, LL.g, UL.g))
  colnames(out) <- c("Estimate", "SE", "LL", "UL")
+ return(out)
+}
+
+#  ci.agree2 =================================================================
+#' Confidence interval for G-index difference in a 2-group design
+#'
+#'                          
+#' @description
+#' Computes adjusted Wald confidence intervals for the G-index of agreement 
+#' within each group and the difference of G-indices. The point estimates are 
+#' maximum likelihood estimates.
+#'
+#'
+#' @param  alpha   alpha level for simultaneous 1-alpha confidence
+#' @param  n1      sample size (objects) in group 1
+#' @param  f1      number of objects rated in agreement in group 1
+#' @param  n2      sample size (objects) in group 2
+#' @param  f2      number of objects rated in agreement in group 2
+#' @param  r       number of rating categories
+#'
+#'
+#' @return
+#' Returns a 3-row matrix. The rows are:
+#' * Row 1: G-index for group 1
+#' * Row 2: G-index for group 2
+#' * Row 3: G-index difference
+#'
+#'
+#' The columns are:
+#' * Estimate - estimate of G-index (single-group and difference)  
+#' * LL - lower limit of confidence interval
+#' * UL - upper limit of confidence interval
+#'
+#'
+#' @examples
+#' ci.agree2(.05, 75, 70, 60, 45, 2)
+#'
+#' # Should return:
+#' #          Estimate        LL        UL
+#' # G1      0.8666667 0.6974555 0.9481141
+#' # G2      0.5000000 0.2523379 0.6851621
+#' # G1 - G2 0.3666667 0.1117076 0.6088621
+#'
+#'
+#' @importFrom stats qnorm
+#' @export
+ci.agree2 <- function(alpha, n1, f1, n2, f2, r) {
+ z <- qnorm(1 - alpha/2)
+ a <- r/(r - 1)
+ p1.ml <- f1/n1
+ p1 <- (f1 + 2)/(n1 + 4)
+ G1 <- a*p1.ml - 1/(r - 1)
+ se1 <- sqrt(p1*(1 - p1)/(n1 + 4))
+ LL1 <- a*(p1 - z*se1) - 1/(r - 1)
+ UL1 <- a*(p1 + z*se1) - 1/(r - 1) 
+ p2.ml <- f2/n2
+ p2 <- (f2 + 2)/(n2 + 4)
+ G2 <- a*p2.ml - 1/(r - 1)
+ se2 <- sqrt(p2*(1 - p2)/(n2 + 4))
+ LL2 <- a*(p2 - z*se2) - 1/(r - 1)
+ UL2 <- a*(p2 + z*se2) - 1/(r - 1) 
+ p1.d <- (f1 + 1)/(n1 + 2)
+ p2.d <- (f2 + 1)/(n2 + 2)
+ se.d <- sqrt(p1.d*(1 - p1.d)/(n1 + 2) + p2.d*(1 - p2.d)/(n2 + 2))
+ LL3 <- a*(p1.d - p2.d - z*se.d)
+ UL3 <- a*(p1.d - p2.d + z*se.d) 
+ out1 <- t(c(G1, LL1, UL1))
+ out2 <- t(c(G2, LL2, UL2))
+ out3 <- t(c(G1 - G2, LL3, UL3))
+ out <- rbind(out1, out2, out3)
+ colnames(out) <- c("Estimate", "LL", "UL")
+ rownames(out) <- c("G1", "G2", "G1 - G2")
  return(out)
 }
 
@@ -1135,8 +1276,8 @@ test.prop1 <- function(f, n, h) {
 #'
 #' @param  f1      number of group 1 participants who have the attribute
 #' @param  f2      number of group 2 participants who have the attribute
-#' @param  n1      sample size in group 1
-#' @param  n2      sample size in group 2
+#' @param  n1      sample size for group 1
+#' @param  n2      sample size for group 2
 #'
 #'
 #' @return
@@ -1183,7 +1324,7 @@ test.prop2 <- function(f1, f2, n1, n2) {
 #' dichotomous response variable in a one-factor between-subjects design.
 #'
 #'
-#' @param  f    vector of frequency counts of participants with the attribute
+#' @param  f    vector of frequency counts of participants who have the attribute
 #' @param  n    vector of sample sizes
 #'
 #'
@@ -1278,7 +1419,7 @@ test.prop.ps <- function(f00, f01, f10, f11) {
 
 
 # ================= File 3: Sample Size for Desired Precision ================
-#  size.ci.prop1 =============================================================
+#  size.ci.prop1 
 #' Sample size for a single proportion confidence interval  
 #'
 #'
@@ -1321,10 +1462,10 @@ size.ci.prop1 <- function(alpha, p, w) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to estimate a difference of
-#' proportions with desired confidence interval precision in a 2-group design.
-#' Set the proportion planning values to .5 for a conservatively large sample
-#' size.
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to estimate a difference of proportions with desired confidence interval 
+#' precision in a 2-group design. Set the proportion planning values to .5 for
+#' a conservatively large sample size.
 #'
 #'
 #' @param  alpha  alpha level for 1-alpha confidence 
@@ -1361,8 +1502,9 @@ size.ci.prop2 <- function(alpha, p1, p2, w) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to estimate a ratio of 
-#' proportions with desired confidence interval precision in a 2-group design.
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to estimate a ratio of proportions with desired confidence interval precision 
+#' in a 2-group design.
 #'
 #'
 #' @param  alpha  alpha level for 1-alpha confidence 
@@ -1400,10 +1542,10 @@ size.ci.ratio.prop2 <- function(alpha, p1, p2, r) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to estimate a linear 
-#' contrast of proportions with desired confidence interval precision in 
-#' a between-subjects design. Set the proportion planning values to .5
-#' for a conservatively large sample size.
+#' Computes the sample size in each group (assuming equal sample sizes) required 
+#' to estimate a linear contrast of proportions with desired confidence interval 
+#' precision in a between-subjects design. Set the proportion planning values to
+#' .5 for a conservatively large sample size.
 #'
 #'
 #' @param  alpha  alpha level for 1-alpha confidence 
@@ -1445,14 +1587,14 @@ size.ci.lc.prop.bs <- function(alpha, p, w, v) {
 #' Computes the sample size required to estimate a proportion difference with 
 #' desired confidence interval precision in a paired-samples design. Set the 
 #' proportion planning values to .5 for a conservatively large sample size.
-#' Set the phi planning value to the smallest value within a plausible range
-#' for a conservatively large sample size.
+#' Set the phi correlation planning value to the smallest value within a
+#' plausible range for a conservatively large sample size.
 #'
 #'
 #' @param  alpha  alpha level for 1-alpha confidence 
 #' @param  p1     planning value of proportion for group 1
 #' @param  p2     planning value of proportion for group 2
-#' @param  phi    planning value of phi coefficient
+#' @param  phi    planning value of phi correlation
 #' @param  w      desired confidence interval width
 #'
 #'
@@ -1494,7 +1636,7 @@ size.ci.prop.ps <- function(alpha, p1, p2, phi, w) {
 #' @param  alpha  alpha level for 1-alpha confidence 
 #' @param  p1     planning value of proportion for measurement 1
 #' @param  p2     planning value of proportion for measurement 2
-#' @param  phi    planning value of phi coefficient
+#' @param  phi    planning value of phi correlation
 #' @param  r      desired upper to lower confidence interval endpoint ratio
 #'
 #'
@@ -1651,13 +1793,13 @@ size.test.prop2 <- function(alpha, pow, p1, p2, es) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to test a linear contrast of 
-#' population proportions with desired power in a between-subjects design. This 
-#' function requires planning values for all proportions. Set the proportion 
-#' planning values to .5 for a conservatively large sample size. The planning
-#' value for the linear contrast of proportions could be set equal to the
-#' linear contrast of proportion planning values or it could be set equal to
-#' a minimally interesting effect size.
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to test a linear contrast of population proportions with desired power in a 
+#' between-subjects design. This function requires planning values for all 
+#' proportions. Set the proportion planning values to .5 for a conservatively 
+#' large sample size. The planning value for the linear contrast of proportions 
+#' could be set equal to the linear contrast of proportion planning values or it
+#' could be set equal to a minimally interesting effect size.
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
@@ -1698,13 +1840,13 @@ size.test.lc.prop.bs <- function(alpha, pow, p, es, v) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to perform an equivalence 
-#' test for the difference in population proportions with desired power in a
-#' 2-group design. The value of h specifies a range of practical equivalence,
-#' -h to h, for the difference in population proportions. The absolute 
-#' difference in the proportion planning values must be less than h.  
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to perform an equivalence test for the difference in population proportions 
+#' with desired power in a 2-group design. The value of h specifies a range of
+#' practical equivalence, -h to h, for the difference in population proportions. 
+#' The absolute difference in the proportion planning values must be less than h.  
 #' Equivalence tests often require a very large sample size. Equivalence tests 
-#' usually use 2 x alpha rather than alpha (e.g., use alpha = .10 rather 
+#' usually use 2 x alpha rather than alpha (e.g., use alpha = .10 rather than
 #' alpha = .05).
 #'
 #'
@@ -1745,14 +1887,14 @@ size.equiv.prop2 <- function(alpha, pow, p1, p2, h) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to perform a superiority 
-#' or inferiority test for the difference in population proportions with 
-#' desired power in a 2-group design. For a superiority test, specify the 
-#' upper limit (h) for the range of practical equivalence and specify values
-#' of p1 and p2 such that p1 - p2 > h. For an inferiority test, specify the 
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to perform a superiority or inferiority test for the difference in population 
+#' proportions with desired power in a 2-group design. For a superiority test, 
+#' specify the upper limit (h) for the range of practical equivalence and specify
+#' values of p1 and p2 such that p1 - p2 > h. For an inferiority test, specify the 
 #' lower limit (-h) for the range of practical equivalence and specify values
-#' of p1 and p2 such that p1 - p2 > -h. This function sets the effect size 
-#' equal to p1 - p2.
+#' of p1 and p2 such that p1 - p2 > -h. This function sets the effect size equal
+#' to p1 - p2.
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
@@ -1799,16 +1941,16 @@ size.supinf.prop2 <- function(alpha, pow, p1, p2, h) {
 #' proportion planning values can set to .5 for a conservatively large sample 
 #' size. The planning value for the proportion difference could be set equal 
 #' to the difference of the two proportion planning values or it could be set
-#' equal to a minimally interesting effect size. Set the phi planning value 
-#' to the smallest value within a plausible range for a conservatively large
-#' sample size.
+#' equal to a minimally interesting effect size. Set the phi correlation 
+#' planning value to the smallest value within a plausible range for a 
+#' conservatively large sample size.
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
 #' @param  pow    desired power
 #' @param  p1     planning value of proportion for measurement 1
 #' @param  p2     planning value of proportion for measurement 2
-#' @param  phi    planning value of phi coefficient
+#' @param  phi    planning value of phi correlation
 #' @param  es     planning value of proportion difference
 #'
 #'
@@ -1842,16 +1984,17 @@ size.test.prop.ps <- function(alpha, pow, p1, p2, phi, es) {
 #'
 #'
 #' @description
-#' Computes the sample size in each group required to perform an equivalence 
-#' test for the difference in population proportions with desired power in a
-#' paired-samples design. The value of h specifies a range of practical 
-#' equivalence, -h to h, for the difference in population proportions. The 
-#' absolute difference in the proportion planning values must be less than h.  
-#' Equivalence tests often require a very large sample size. Equivalence tests 
-#' usually use 2 x alpha rather than alpha (e.g., use alpha = .10 rather 
-#' alpha = .05). This function sets the effect size equal to the difference
-#' in proportion planning values. Set the phi planning value to the smallest 
-#' value within a plausible range for a conservatively large sample size.
+#' Computes the sample size in each group (assuming equal sample sizes) required
+#' to perform an equivalence test for the difference in population proportions 
+#' with desired power in a paired-samples design. The value of h specifies a 
+#' range of practical equivalence, -h to h, for the difference in population 
+#' proportions. The absolute difference in the proportion planning values must
+#' be less than h.  Equivalence tests often require a very large sample size. 
+#' Equivalence tests usually use 2 x alpha rather than alpha (e.g., use 
+#' alpha = .10 rather alpha = .05). This function sets the effect size equal to
+#' the difference in proportion planning values. Set the phi correlation planning
+#' value to the smallest value within a plausible range for a conservatively 
+#' large sample size.
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
@@ -1901,16 +2044,16 @@ size.equiv.prop.ps <- function(alpha, pow, p1, p2, phi, h) {
 #' that p1 - p2 > h. For an inferiority test, specify the lower limit (-h) for 
 #' the range of practical equivalence and specify values of p1 and p2 such  
 #' that p1 - p2 > -h. This function sets the effect size equal to the 
-#' difference in proportion planning values. Set the phi planning value to the
-#' smallest value within a plausible range for a conservatively large sample 
-#' size.
+#' difference in proportion planning values. Set the phi correlation planning 
+#' value to the smallest value within a plausible range for a conservatively 
+#' large sample size.
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
 #' @param  pow    desired power
 #' @param  p1     planning value of proportion for measurement 1
 #' @param  p2     planning value of proportion for measurement 2
-#' @param  phi    planning value of phi coefficient
+#' @param  phi    planning value of phi correlation
 #' @param  h      lower or upper limit for range of practical equivalence
 #'
 #'

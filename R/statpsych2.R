@@ -6,12 +6,12 @@
 #' @description
 #' Computes a Fisher confidence interval for a population Pearson correlation  
 #' or partial correlation with s control variables. Set s = 0 for a Pearson 
-#' correlation. This function uses a sample correlation as input. Use the
+#' correlation. This function uses an estimated correlation as input. Use the
 #' cor.test function for a Pearson correlation with raw data input.
 #'
 #'  
 #' @param  alpha 	alpha level for 1-alpha confidence
-#' @param  cor	  	sample Pearson or partial correlation 
+#' @param  cor	  	estimated Pearson or partial correlation 
 #' @param  s	  	number of control variables
 #' @param  n	  	sample size
 #'
@@ -68,8 +68,8 @@ ci.cor <- function(alpha, cor, s, n) {
 #'
 #'  
 #' @param  alpha 	alpha level for 1-alpha confidence
-#' @param  cor	  	sample semipartial correlation 
-#' @param  r2	  	sample squared multiple correlation in full model
+#' @param  cor	  	estimated semipartial correlation 
+#' @param  r2	  	estimated squared multiple correlation in full model
 #' @param  n	  	sample size
 #'
 #'
@@ -122,10 +122,10 @@ ci.spcor <- function(alpha, cor, r2, n) {
 #'
 #'  
 #' @param  alpha	alpha level for 1-alpha confidence
-#' @param  cor1	  	sample Pearson correlation in group 1
-#' @param  cor2	  	sample Pearson correlation in group 2
-#' @param  n1	  	sample size in group 1
-#' @param  n2	  	sample size in group 2
+#' @param  cor1	  	estimated Pearson correlation in group 1
+#' @param  cor2	  	estimated Pearson correlation in group 2
+#' @param  n1	  	sample size for group 1
+#' @param  n2	  	sample size for group 2
 #'
 #'
 #' @return 
@@ -183,9 +183,9 @@ ci.cor2 <- function(alpha, cor1, cor2, n1, n2) {
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
-#' @param  cor1	  sample Pearson correlation between y and x1
-#' @param  cor2	  sample Pearson correlation between y and x2
-#' @param  cor12  sample Pearson correlation between x1 and x2
+#' @param  cor1	  estimated Pearson correlation between y and x1
+#' @param  cor2	  estimated Pearson correlation between y and x2
+#' @param  cor12  estimated Pearson correlation between x1 and x2
 #' @param  n	  sample size
 #'
 #'
@@ -251,10 +251,10 @@ ci.cor.dep <- function(alpha, cor1, cor2, cor12, n) {
 #' coefficients.
 #'
 #'  
-#' @param  cor1  sample correlation in group 1 
+#' @param  cor1  estimated correlation for group 1 
 #' @param  ll1   lower limit for group 1 correlation
 #' @param  ul1   upper limit for group 1 correlation
-#' @param  cor2  sample correlation in group 2
+#' @param  cor2  estimated correlation for group 2
 #' @param  ll2   lower limit for group 2 correlation
 #' @param  ul2   upper limit for group 2 correlation
 #'
@@ -304,10 +304,10 @@ ci.cor2.gen <- function(cor1, ll1, ul1, cor2, ll2, ul2) {
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
-#' @param  m1     sample mean for group 1
-#' @param  m2     sample mean for group 2
-#' @param  sd1    sample standard deviation for group 1
-#' @param  sd2    sample standard deviation for group 2
+#' @param  m1     estimated mean for group 1
+#' @param  m2     estimated mean for group 2
+#' @param  sd1    estimated standard deviation for group 1
+#' @param  sd2    estimated standard deviation for group 2
 #' @param  n1     sample size for group 1
 #' @param  n2	  sample size for group 2
 #'
@@ -428,10 +428,10 @@ ci.spear <- function(alpha, y, x) {
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
-#' @param  cor1	  sample Spearman correlation in group 1
-#' @param  cor2	  sample Spearman correlation in group 2
-#' @param  n1	  sample size in group 1
-#' @param  n2	  sample size in group 2
+#' @param  cor1	  estimated Spearman correlation for group 1
+#' @param  cor2	  estimated Spearman correlation for group 2
+#' @param  n1	  sample size for group 1
+#' @param  n2	  sample size for group 2
 #'
 #'
 #' @return 
@@ -487,9 +487,9 @@ ci.spear2 <- function(alpha, cor1, cor2, n1, n2) {
 #'
 #' @description
 #' Computes a confidence interval for a population mean absolute prediction
-#' error (MAPE) in a general linear model. The MAPE is a robust alternative 
-#' to the residual standard deviation. This function requires a vector of 
-#' estimated residuals from a general linear model.
+#' error (MAPE) in a general linear model. The MAPE is a more robust 
+#' alternative to the residual standard deviation. This function requires a
+#' vector of estimated residuals from a general linear model.
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
@@ -543,15 +543,15 @@ ci.mape <- function(alpha, r, s) {
 #' conditional slopes (simple slopes) in a general linear model that
 #' includes a predictor variable that is the product of a moderator 
 #' variable and a predictor variable. Conditional slopes are computed  
-#' at low and high values of the moderator variable. 
+#' at specified low and high values of the moderator variable. 
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
-#' @param  b1     sample coefficient for predictor variable
-#' @param  b2     sample coefficient for product variable
+#' @param  b1     estimated slope coefficient for predictor variable
+#' @param  b2     estimated slope coefficient for product variable
 #' @param  se1    standard error for predictor coefficient
 #' @param  se2    standard error for product coefficient
-#' @param  cov    sample covariance between predictor and product coefficients
+#' @param  cov    estimated covariance between predictor and product coefficients
 #' @param  lo     low value of moderator variable 
 #' @param  hi     high value of moderator variable 
 #' @param  dfe    error degrees of freedom 
@@ -609,7 +609,7 @@ ci.condslope <- function(alpha, b1, b2, se1, se2, cov, lo, hi, dfe) {
 #'  
 #' @description
 #' Compute a confidence interval and test statistic for a linear contrast
-#' of a population regression coefficient (y-intercept or slope) across
+#' of a population regression coefficients (y-intercept or slope) across
 #' groups in a multiple group regression model. Equality of error variances
 #' across groups is not assumed. A Satterthwaite adjustment to the degrees 
 #' of freedom is used to improve the accuracy of the confidence interval. 
@@ -619,7 +619,7 @@ ci.condslope <- function(alpha, b1, b2, se1, se2, cov, lo, hi, dfe) {
 #' @param  est    vector of parameter estimates
 #' @param  se     vector of standard errors
 #' @param  n      vector of group sample sizes
-#' @param  s      number of predictor variables for within-group model
+#' @param  s      number of predictor variables for each within-group model
 #' @param  v      vector of between-subject contrast coefficients
 #'
 #' 
@@ -673,7 +673,7 @@ ci.lc.reg <- function(alpha, est, se, n, s, v) {
 #'
 #'
 #' @param   alpha  alpha value for 1-alpha confidence
-#' @param   cor    sample correlation or association coefficient 
+#' @param   cor    estimated correlation or association coefficient 
 #' @param   se     standard error of estimate
 #'
 #'
@@ -712,7 +712,7 @@ ci.fisher <- function(alpha, cor, se) {
 #' Computes a Monte Carlo confidence interval (500,000 trials) for a population
 #' unstandardized indirect effect in a path model. This function is not
 #' recommended for a standardized indirect effect unless the standardized
-#' slope estimates for both paths are less than about .3 in absoslute value. 
+#' slope estimates for both paths are less than about .3 in absolute value. 
 #' The Monte Carlo method is general in that the slope estimates and standard 
 #' errors do not need to be OLS estimates with homoscedastic standard errors. 
 #' For example, LAD slope estimates and their standard errors, OLS slope 
@@ -731,7 +731,7 @@ ci.fisher <- function(alpha, cor, se) {
 #' @return 
 #' Returns a 1-row matrix. The columns are:
 #' * Estimate - estimated indirect effect
-#' * SE - standard error
+#' * SE - standard error of indirect effect
 #' * LL - lower limit of the confidence interval
 #' * UL - upper limit of the confidence interval
 #' 
@@ -757,6 +757,195 @@ ci.indirect <- function(alpha, b1, b2, se1, se2) {
  ul <- y[k - c + 1]
  out <- t(c(b1*b2, se, ll, ul))
  colnames(out) <- c("Estimate", "SE", "LL", "UL")
+ return(out)
+}
+
+
+#  ci.lc.gml ==================================================================
+#' Confidence interval for a linear contrast of general linear model parameters
+#'
+#'                                  
+#' @description
+#' Computes the estimate, standard error, and confidence interval for a linear
+#' contrast of parameters in a general linear model using coef(object) and
+#' vcov(object) where "object" is a fitted model object from the lm function.
+#'
+#'
+#' @param   alpha  alpha for 1 - alpha confidence
+#' @param   n      sample size
+#' @param   b      vector of parameter estimates from coef(object)
+#' @param   V      covariance matrix of parameter estimates from vcov(object)
+#' @param   q      vector of coefficients
+#'
+#'
+#' @return 
+#' Returns a 1-row matrix. The columns are:
+#' * Estimate - estimate of linear function 
+#' * SE - standard error
+#' * t - t test statistic 
+#' * df - degrees of freedom
+#' * p - p-value 
+#' * LL - lower limit of the confidence interval
+#' * UL - upper limit of the confidence interval 
+#'
+#'
+#' @examples
+#' y <- c(43, 62, 49, 60, 36, 79, 55, 42, 67, 50)
+#' x1 <- c(3, 6, 4, 6, 2, 7, 4, 2, 7, 5)
+#' x2 <- c(4, 6, 3, 7, 1, 9, 3, 3, 8, 4)
+#' out <- lm(y ~ x1 + x2)
+#' b <- coef(out)
+#' V <- vcov(out)
+#' n <- length(y)
+#' q <- c(0, .5, .5)
+#' b
+#' ci.lc.glm(.05, n, b, V, q)
+#'
+#' #  Should return:
+#' # (Intercept)          x1          x2 
+#' #   26.891111    3.648889    2.213333 
+#' # > ci.lc.glm(.05, n, b, V, q)
+#' #      Estimate        SE       t df           p       LL       UL
+#' # [1,] 2.931111 0.4462518 6.56829  7 0.000313428 1.875893 3.986329
+#'
+#'
+#' @importFrom stats qt
+#' @importFrom stats pt
+#' @export
+ci.lc.glm <-function(alpha, n, b, V, q) {
+ df <- n - length(b)
+ tcrit <- qt(1 - alpha/2, df)
+ est <- t(q)%*%b
+ se <- sqrt(t(q)%*%V%*%q)
+ t <- est/se
+ p <- 2*(1 - pt(abs(t), df))
+ ll <- est - tcrit*se
+ ul <- est + tcrit*se
+ out <- t(c(est, se, t, df, p, ll, ul))
+ colnames(out) <- c("Estimate", "SE", "t", "df", "p", "LL", "UL")
+ return(out)
+}
+
+
+#  ci.lc.gen.bs ===============================================================
+#' Confidence interval for a linear contrast of parameters in a between-subjects
+#' design
+#'
+#'                                              
+#' @description
+#' Computes the estimate, standard error, and approximate confidence interval 
+#' for a linear contrast of any type of parameter (e.g., quartile, ordinal 
+#' regression slope, path coefficient, G-index) where each parameter value has
+#' been estimated from a different sample. The parameter vaues are assumed to 
+#' be of the same type (e.g., all unstandardized path coefficients) and their 
+#' sampling distributions are assumed to be approximately normal.
+#'
+#'
+#' @param  alpha   alpha level for simultaneous 1-alpha confidence
+#' @param  est     vector of parameter estimates
+#' @param  se      vector of standard errors
+#' @param  v       vector of contrast coefficients
+#'
+#'
+#' @return 
+#' Returns a 1-row matrix. The columns are:
+#' * Estimate - estimate of linear contrast
+#' * SE - standard error of linear contrast
+#' * LL - lower limit of confidence interval
+#' * UL - upper limit of confidence interval
+#'
+#'
+#' @examples
+#' est <- c(3.86, 4.57, 2.29, 2.88)
+#' se <- c(0.185, 0.365, 0.275, 0.148)
+#' v <- c(.5, .5, -.5, -.5)
+#' ci.lc.gen.bs(.05, est, se, v)
+#'
+#' # Should return:
+#' #      Estimate        SE       LL       UL
+#' # [1,]     1.63 0.2573806 1.125543 2.134457
+#'
+#'
+#' @importFrom stats qnorm
+#' @export
+ci.lc.gen.bs <- function(alpha, est, se, v) {
+ est.lc <- t(v)%*%est
+ se.lc <- sqrt(t(v)%*%diag(se^2)%*%v)
+ zcrit <- qnorm(1 - alpha/2)
+ ll <- est.lc - zcrit*se.lc
+ ul <- est.lc + zcrit*se.lc
+ out <- t(c(est.lc, se.lc, ll, ul))
+ colnames(out) <- c("Estimate", "SE", "LL", "UL")
+ return(out)
+}
+
+#  ci.rsqr ===================================================================
+#' Confidence interval for squared multiple correlation
+#'                             
+#' @description
+#' Computes an approximate confidence interval for a population squared 
+#' multiple correlation in a linear model with random predictor variables.  
+#' This function uses the scaled central F approximation method.
+#'
+#'
+#' @param  alpha    alpha value for 1-alpha confidence
+#' @param  r2       estimated unadjusted squared multiple correlation
+#' @param  s        number of predictor variables
+#' @param  n        sample size
+#'
+#' @references
+#' \insertRef{Helland1987}{statpsych}
+#'
+#' @return 
+#' Returns a 1-row matrix. The columns are:
+#' * R-squared - estimate of unadjusted R-squared 
+#' * adj R-squared - bias adjusted R-squared estimate
+#' * LL - lower limit of the confidence interval
+#' * UL - upper limit of the confidence interval
+#'
+#'
+#' @examples
+#' ci.rsqr(.05, .241, 3, 116)
+#'
+#' # Should return:
+#' #        R-squared    adj R-squared          LL        UL
+#' # [1,]       0.241        0.2206696  0.09819599 0.3628798
+#'  
+#' 
+#' @importFrom stats qf
+#' @export
+ci.rsqr <- function(alpha, r2, s, n) {
+ alpha1 <- alpha/2
+ alpha2 <- 1 - alpha1
+ dfe <- n - s - 1
+ adj <- 1 - (n - 1)*(1 - r2)/dfe
+ if (adj < 0) {adj = 0}
+ b1 <- r2/(1 - r2)
+ b2 <- adj/(1 - adj)
+ v1 <- ((n - 1)*b1 + s)^2/((n - 1)*b1*(b1 + 2) + s)
+ v2 <- ((n - 1)*b2 + s)^2/((n - 1)*b2*(b2 + 2) + s)
+ F1 <- qf(alpha1, v1, dfe)
+ F2 <- qf(alpha2, v2, dfe)
+ ll <- (dfe*r2 - (1 - r2)*s*F2)/(dfe*(r2 + (1 - r2)*F2))
+ ul <- (dfe*r2 - (1 - r2)*s*F1)/(dfe*(r2 + (1 - r2)*F1))
+ if (ll < 0) {ll = 0}
+ if (ul < 0) {ul = 0}
+ i <- 1
+ while (i < 30) {
+   i <- i + 1
+   b1 <- ul/(1 - ul)
+   b2 <- ll/(1 - ll)
+   v1 <- ((n - 1)*b1 + s)^2/((n - 1)*b1*(b1 + 2) + s)
+   v2 <- ((n - 1)*b2 + s)^2/((n - 1)*b2*(b2 + 2) + s)
+   F1 <- qf(alpha1, v1, dfe)
+   F2 <- qf(alpha2, v2, dfe)
+   ll <- (dfe*r2 - (1 - r2)*s*F2)/(dfe*(r2 + (1 - r2)*F2))
+   ul <- (dfe*r2 - (1 - r2)*s*F1)/(dfe*(r2 + (1 - r2)*F1))
+   if (ll < 0) {ll = 0}
+   if (ul < 0) {ul = 0}
+ }
+ out <- t(c(r2, adj, ll, ul))
+ colnames(out) <- c("R-squared", "adj R-squared", "LL", "UL")
  return(out)
 }
 
@@ -869,7 +1058,7 @@ size.ci.cor <- function(alpha, cor, s, w) {
 #' in a random-x regression model with desired confidence interval precision.
 #' Set the planning value of squared multiple correlation to 1/3 for a 
 #' conservatively large sample size. This function uses an approximation to
-#' the standrd error of the squared multiple correlation.
+#' the standard error of the squared multiple correlation.
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
@@ -946,20 +1135,20 @@ size.ci.condmean <- function(alpha, evar, xvar, diff, w) {
 
 
 #  size.ci.lc.ancova =========================================================
-#' Sample size for a mean linear contrast confidence interval in an ANCOVA  
+#' Sample size for a linear contrast confidence interval in an ANCOVA  
 #'
 #'
 #' @description
-#' Computes the sample size for each group required to estimate a linear 
-#' contrast of means in an ANCOVA model with desired confidence interval
-#' precision. In a nonexperimental design, the sample size is affected by 
-#' the magnitude of covariate mean differences across groups. The covariate
-#' mean differences can be approximated by specifying the largest 
-#' standardized covariate mean difference across all pairwise group 
-#' differences and for all covariates. In an experiment, this standardized 
-#' mean difference should be set to 0. Set the error variance planning value
-#' to the largest value within a plausible range for a conservatively large 
-#' sample size.
+#' Computes the sample size for each group (assuming equal sample sizes) 
+#' required to estimate a linear contrast of means in an ANCOVA model with 
+#' desired confidence interval precision. In a nonexperimental design, the 
+#' sample size is affected by the magnitude of covariate mean differences 
+#' across groups. The covariate mean differences can be approximated by 
+#' specifying the largest standardized covariate mean difference across all 
+#' pairwise group differences and for all covariates. In an experiment, this
+#' standardized mean difference should be set to 0. Set the error variance 
+#' planning value to the largest value within a plausible range for a 
+#' conservatively large sample size.
 #'
 #'  
 #' @param  alpha  alpha level for 1-alpha confidence
@@ -1012,7 +1201,7 @@ size.ci.lc.ancova <- function(alpha, evar, s, d, w, v) {
 #'  
 #' @param  alpha   alpha level for hypothesis test
 #' @param  pow     desired power
-#' @param  evar    planning value of within group (error) variance
+#' @param  evar    planning value of within-group (error) variance
 #' @param  x       vector of x values of the quantitative factor
 #' @param  slope   planning value of slope
 #' @param  h       hypothesized value of slope  
@@ -1061,7 +1250,7 @@ size.test.slope <- function(alpha, pow, evar, x, slope, h) {
 #' @param  pow     desired power
 #' @param  cor     planning value of correlation
 #' @param  s       number of control variables
-#' @param  h       hypothesized value of slope  
+#' @param  h       hypothesized value of correlation  
 #'
 #' 
 #' @return 
@@ -1141,12 +1330,12 @@ size.interval.cor <- function(alpha, pow, cor, s, h) {
 #'
 #'
 #' @description
-#' Computes the sample size for each group required to test a linear contrast
-#' of means in an ANCOVA model with desired power. In a nonexperimental design,
-#' the sample size is affected by the magnitude of covariate mean differences 
-#' across groups. The covariate mean differences can be approximated by 
-#' specifying the largest standardized covariate mean difference across all 
-#' pairwise comparisons and for all covariates. In an experiment, this 
+#' Computes the sample size for each group (assuming equal sample sizes) required
+#' to test a linear contrast of means in an ANCOVA model with desired power. In a 
+#' nonexperimental design, the sample size is affected by the magnitude of 
+#' covariate mean differences across groups. The covariate mean differences can be 
+#' approximated by specifying the largest standardized covariate mean difference 
+#' across all pairwise comparisons and for all covariates. In an experiment, this 
 #' standardized mean difference is set to 0. Set the error variance planning 
 #' value to the largest value within a plausible range for a conservatively 
 #' large sample size.
@@ -1154,7 +1343,7 @@ size.interval.cor <- function(alpha, pow, cor, s, h) {
 #'  
 #' @param  alpha   alpha level for hypothesis test
 #' @param  pow     desired power
-#' @param  evar    planning value of within group (error) variance
+#' @param  evar    planning value of within-group (error) variance
 #' @param  es      planning value of linear contrast
 #' @param  s       number of covariates 
 #' @param  d       largest standardized mean difference for all covariates
