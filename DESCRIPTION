@@ -1,7 +1,7 @@
 Package: statpsych
 Type: Package
 Title: Statistical Methods for Psychologists
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: c(
     person("Douglas G.", "Bonett", email = "dgbonett@ucsc.edu", role = c("aut", "cre")),
     person("Robert J.", "Calin-Jageman", email = "rcalinjageman@dom.edu", role = c("ctb")))
@@ -9,15 +9,15 @@ Description: Implements confidence interval and sample size methods that are esp
 BugReports: https://github.com/dgbonett/statpsych/issues
 License: GPL-3
 Encoding: UTF-8
-Imports: utils, stats, mathjaxr, Rdpack
-RoxygenNote: 7.2.0
+Imports: utils, stats, mathjaxr, Rdpack, mnonr
+RoxygenNote: 7.2.1
 RdMacros: Rdpack, mathjaxr
-Suggests: testthat (>= 3.0.0)
+Suggests: MASS, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2022-06-21 20:26:20 UTC; rcali
+Packaged: 2022-08-18 11:28:09 UTC; rcali
 Author: Douglas G. Bonett [aut, cre],
   Robert J. Calin-Jageman [ctb]
 Maintainer: Douglas G. Bonett <dgbonett@ucsc.edu>
 Repository: CRAN
-Date/Publication: 2022-06-22 07:40:02 UTC
+Date/Publication: 2022-08-19 09:00:05 UTC
