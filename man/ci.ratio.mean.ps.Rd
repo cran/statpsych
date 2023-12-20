@@ -11,7 +11,7 @@ ci.ratio.mean.ps(alpha, y1, y2)
 
 \item{y1}{vector of measurement 1 scores}
 
-\item{y2}{vector of measurement 2 scores}
+\item{y2}{vector of measurement 2 scores (paired with y1)}
 }
 \value{
 Returns a 1-row matrix. The columns are:
@@ -34,8 +34,8 @@ y2 <- c(3.0, 3.1, 2.7, 2.6, 3.2, 3.8, 3.2, 3.0)
 ci.ratio.mean.ps(.05, y1, y2)
 
 # Should return:
-#       Mean1 Mean2 Mean1/Mean2      LL       UL
-# [1,] 3.4875 3.075    1.134146 1.09417 1.175583
+#  Mean1 Mean2 Mean1/Mean2      LL       UL
+# 3.4875 3.075    1.134146 1.09417 1.175583
 
 
 }
