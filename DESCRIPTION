@@ -1,7 +1,7 @@
 Package: statpsych
 Type: Package
 Title: Statistical Methods for Psychologists
-Version: 1.5.0
+Version: 1.6.0
 Authors@R: c(
     person("Douglas G.", "Bonett", email = "dgbonett@ucsc.edu", role = c("aut", "cre")),
     person("Robert J.", "Calin-Jageman", email = "rcalinjageman@dom.edu", role = c("ctb")))
@@ -10,14 +10,14 @@ BugReports: https://github.com/dgbonett/statpsych/issues
 License: GPL-3
 Encoding: UTF-8
 Imports: utils, stats, mnonr, Rdpack, mathjaxr
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.2
 RdMacros: Rdpack, mathjaxr
 Suggests: MASS, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 NeedsCompilation: no
-Packaged: 2023-12-20 21:49:42 UTC; rcali
+Packaged: 2024-07-09 01:09:21 UTC; rcali
 Author: Douglas G. Bonett [aut, cre],
   Robert J. Calin-Jageman [ctb]
 Maintainer: Douglas G. Bonett <dgbonett@ucsc.edu>
 Repository: CRAN
-Date/Publication: 2023-12-20 22:20:02 UTC
+Date/Publication: 2024-07-09 02:40:02 UTC
