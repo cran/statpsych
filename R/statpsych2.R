@@ -23,7 +23,7 @@
 #'
 #' @return 
 #' Returns a 1-row matrix. The columns are:
-#' * Estimate - estimated correlation
+#' * Estimate - estimated correlation (from input)
 #' * SE - standard error
 #' * LL - lower limit of the confidence interval
 #' * UL - upper limit of the confidence interval
@@ -266,8 +266,8 @@ ci.cor.dep <- function(alpha, cor1, cor2, cor12, n) {
 #' Pearson, Spearman, partial, semipartial, or point-biserial correlations. 
 #' The correlations could also be correlations between two latent factors.
 #' The function requires a point estimate and a 100(1 - alpha)% confidence
-#' interval for each correlation as input. The confidence intervals can be
-#' obtained using the ci.fisher function.
+#' interval for each correlation as input. The confidence intervals for 
+#' each correlation can be obtained using the ci.fisher function.
 #'
 #'  
 #' @param  cor1  estimated correlation for group 1 
@@ -896,7 +896,7 @@ ci.indirect <- function(alpha, b1, b2, se1, se2) {
 #' @param   n      sample size
 #' @param   b      vector of parameter estimates from coef(object)
 #' @param   V      covariance matrix of parameter estimates from vcov(object)
-#' @param   q      vector of coefficients
+#' @param   q      vector of contrast coefficients
 #'
 #'
 #' @return 
@@ -956,11 +956,10 @@ ci.lc.glm <-function(alpha, n, b, V, q) {
 #'                                              
 #' @description
 #' Computes the estimate, standard error, and approximate confidence interval 
-#' for a linear contrast of any type of parameter (e.g., quartile, logistic
-#' regression slope, path coefficient) where each parameter value has
+#' for a linear contrast of any type of parameter where each parameter value has
 #' been estimated from a different sample. The parameter values are assumed to 
-#' be of the same type (e.g., all unstandardized path coefficients) and their 
-#' sampling distributions are assumed to be approximately normal.
+#' be of the same type and their sampling distributions are assumed to be 
+#' approximately normal.
 #'
 #'
 #' @param  alpha   alpha level for 1-alpha confidence
@@ -1367,29 +1366,42 @@ ci.bscor <- function(alpha, m1, m2, sd1, sd2, n1, n2) {
 
 
 #  pi.cor ===================================================================== 
-#' Prediction limit for an estimated correlation
+#' Prediction limits for an estimated correlation
 #'
 #'                                        
 #' @description
-#' Computes approximate prediction interval for the estimated Pearson 
-#' correlation in a future study with a planned sample size of n. The 
-#' prediction interval uses a correlation estimate from a prior study 
-#' that had a sample size of n0. 
+#' Computes approximate one-sided or two-sided prediction limits for the 
+#' estimated Pearson correlation in a future study with a planned sample 
+#' size of n. The prediction interval uses a correlation estimate from a
+#' prior study that had a sample size of n0. 
+#'
+#' Several confidence interval sample size functions in this package require
+#' a planning value of the estimated Pearson correlation that is expected 
+#' in the planned study. A one-sided lower correlation prediction limit is 
+#' useful as a correlation planning value for the sample size required to 
+#' obtain a confidence interval with desired width. This strategy for 
+#' specifying a correlation planning value is useful in applications where 
+#' the population correlation in the prior study is assumed to be very similar
+#' to the population correlation in the planned study. 
 #'
 #'
 #' @param  alpha  alpha value for 1-alpha confidence 
 #' @param  cor    estimated Pearson correlation from prior study
 #' @param  n0     sample size used to estimate correlation in prior study
 #' @param  n      planned sample size of future study
+#' @param  type   
+#' * set to 1 for two-sided prediction interval 
+#' * set to 2 for one-sided upper prediction limit 
+#' * set to 3 for one-sided lower prediction limit 
 #'
 #'
 #' @return 
-#' Returns a prediction interval of an estimated correlation in a 
-#' future study
+#' Returns one-sided or two-sided prediction limits of an estimated 
+#' Pearson correlation in a future study
 #'
 #'
 #' @examples
-#' pi.cor(.1, .761, 50, 100)
+#' pi.cor(.1, .761, 50, 100, 1)
 #'
 #' # Should return:
 #' #         LL        UL
@@ -1398,15 +1410,160 @@ ci.bscor <- function(alpha, m1, m2, sd1, sd2, n1, n2) {
 #' 
 #' @importFrom stats qnorm
 #' @export
-pi.cor <- function(alpha, cor, n0, n) {
+pi.cor <- function(alpha, cor, n0, n, type) {
+ if (type == 1) {
+  z <- qnorm(1 - alpha/2)
+  cor.z <- log((1 + abs(cor))/(1 - abs(cor)))/2
+  ll0 <- cor.z - abs(cor)/(2*(n0 - 1)) - z*sqrt(1/(n0 - 3) + 1/(n - 3))
+  ul0 <- cor.z - abs(cor)/(2*(n0 - 1)) + z*sqrt(1/(n0 - 3) + 1/(n - 3))
+  ll <- (exp(2*ll0) - 1)/(exp(2*ll0) + 1)
+  ul <- (exp(2*ul0) - 1)/(exp(2*ul0) + 1)
+  out <- t(c(ll, ul))
+  colnames(out) <- c("LL", "UL")
+ }
+ else if (type == 2) {
+  z <- qnorm(1 - alpha)
+  cor.z <- log((1 + abs(cor))/(1 - abs(cor)))/2
+  ul0 <- cor.z - abs(cor)/(2*(n0 - 1)) + z*sqrt(1/(n0 - 3) + 1/(n - 3))
+  ul <- (exp(2*ul0) - 1)/(exp(2*ul0) + 1)
+  out <- matrix(ul, nrow = 1, ncol = 1)
+  colnames(out) <- "UL"
+ }
+ else {
+  z <- qnorm(1 - alpha)
+  cor.z <- log((1 + abs(cor))/(1 - abs(cor)))/2
+  ll0 <- cor.z - abs(cor)/(2*(n0 - 1)) - z*sqrt(1/(n0 - 3) + 1/(n - 3))
+  ll <- (exp(2*ll0) - 1)/(exp(2*ll0) + 1)
+  out <- matrix(ll, nrow = 1, ncol = 1)
+  colnames(out) <- "LL"
+ }
+ rownames(out) <- ""
+ return(out)
+}
+
+
+# ci.bayes.cor ============================================================
+#' Bayesian credible interval for a Pearson or partial correlation with a
+#' skeptical prior
+#'
+#'
+#' @description
+#' Computes an approximate Bayesian credible interval for a Pearson or  
+#' partial correlation with a skeptical prior. The skeptical prior 
+#' distribution is Normal with a mean of 0 and a small standard deviation.
+#' A skeptical prior assumes that the population correlation is within 
+#' a range of small values (-r to r). If the skeptic is 95% confident that
+#' the population correlation is between -r and r, then the prior standard
+#' deviation can be set to r/1.96. A correlation that is less than .2 in 
+#' absolute value is typically considered to be "small", and the prior 
+#' standard deviation could then be set to .2/1.96. A correlation value
+#' that is considered to be small will depend on the application. Set s = 0
+#' for a Pearson correlation. 
+#'
+#'
+#' @param   alpha        alpha level for 1-alpha credibility interval
+#' @param   prior_sd     standard deviation of skeptical prior distribution 
+#' @param   cor          estimated Pearson or partial correlation
+#' @param   s	     	 number of control variables
+#' @param   n            sample size
+#'
+#'
+#' @return
+#' Returns a 1-row matrix. The columns are:
+#' * Posterior mean - posterior mean (Bayesian estimate of correlation)
+#' * LL - lower limit of the credible interval
+#' * UL - upper limit of the credible interval
+#'
+#'
+#' @examples
+#' ci.bayes.cor(.05, .1, .536, 0, 50)
+#'
+#' # Should return:
+#' # Posterior mean         LL        UL
+#' #      0.1873765 0.02795441 0.3375031
+#'
+#' ci.bayes.cor(.05, .1, .536, 0, 300)
+#'
+#' # Should return:
+#' #  Posterior mean        LL        UL
+#' #       0.4195068 0.3352449 0.4971107
+#'
+#'
+#' @importFrom stats qnorm
+#' @export
+ci.bayes.cor <- function(alpha, prior_sd, cor, s, n) {
  z <- qnorm(1 - alpha/2)
- cor.z <- log((1 + abs(cor))/(1 - abs(cor)))/2
- ll0 <- cor.z - abs(cor)/(2*(n0 - 1)) - z*sqrt(1/(n0 - 3) + 1/(n - 3))
- ul0 <- cor.z - abs(cor)/(2*(n0 - 1)) + z*sqrt(1/(n0 - 3) + 1/(n - 3))
+ se <- 1/sqrt(n - s - 3)
+ zr <- log((1 + cor)/(1 - cor))/2 - cor/(2*(n - 1))
+ post_sd <- sqrt(1/(1/prior_sd^2 + 1/se^2))
+ post_mean <- (zr/se^2)/(1/prior_sd^2 + 1/se^2)
+ ll0 <- post_mean - z*post_sd
+ ul0 <- post_mean + z*post_sd
+ mean <- (exp(2*post_mean) - 1)/(exp(2*post_mean) + 1)
  ll <- (exp(2*ll0) - 1)/(exp(2*ll0) + 1)
  ul <- (exp(2*ul0) - 1)/(exp(2*ul0) + 1)
- out <- t(c(ll, ul))
- colnames(out) <- c("LL", "UL")
+ out <- t(c(mean, ll, ul))
+ colnames(out) <- c("Posterior mean", "LL", "UL")
+ rownames(out) <- ""
+ return(out)
+}
+
+
+# ci.bayes.spcor ============================================================
+#' Bayesian credible interval for a semipartial correlation with a
+#' skeptical prior
+#'
+#'
+#' @description
+#' Computes an approximate Bayesian credible interval for a semipartial 
+#' correlation with a skeptical prior. The skeptical prior distribution is
+#' Normal with a mean of 0 and a small standard deviation. A skeptical prior 
+#' assumes that the population semipartial correlation is within a range of 
+#' small values (-r to r). If the skeptic is 95% confident that the population
+#' correlation is between -r and r, then the prior standard deviation can be 
+#' set to r/1.96. A semipartial correlation that is less than .2 in absolute 
+#' value is typically considered to be "small", and the prior standard 
+#' deviation could then be set to .2/1.96 = .1. A semipartial correlation value
+#' that is considered to be small will depend on the application. This function 
+#' requires the standard error of the estimated semipartial correlation which
+#' can be obtained from the ci.spcor function. 
+#'
+#'
+#' @param   alpha        alpha level for 1-alpha credibility interval
+#' @param   prior_sd     standard deviation of skeptical prior distribution 
+#' @param   cor          estimated semipartial partial correlation
+#' @param   se	     	 standard error of estimated semipartial correlation
+#'
+#'
+#' @return
+#' Returns a 1-row matrix. The columns are:
+#' * Posterior mean - posterior mean (Bayesian estimate of correlation)
+#' * LL - lower limit of the credible interval
+#' * UL - upper limit of the credible interval
+#'
+#'
+#' @examples
+#' ci.bayes.spcor(.05, .1, .582, .137)
+#'
+#' # Should return:
+#' #  Posterior mean        LL        UL
+#' #       0.2272797 0.07288039 0.3710398
+#'
+#'
+#' @importFrom stats qnorm
+#' @export
+ci.bayes.spcor <- function(alpha, prior_sd, cor, se) {
+ z <- qnorm(1 - alpha/2)
+ zr <- log((1 + cor)/(1 - cor))/2 
+ post_sd <- sqrt(1/(1/prior_sd^2 + 1/se^2))
+ post_mean <- (zr/se^2)/(1/prior_sd^2 + 1/se^2)
+ ll0 <- post_mean - z*post_sd
+ ul0 <- post_mean + z*post_sd
+ mean <- (exp(2*post_mean) - 1)/(exp(2*post_mean) + 1)
+ ll <- (exp(2*ll0) - 1)/(exp(2*ll0) + 1)
+ ul <- (exp(2*ul0) - 1)/(exp(2*ul0) + 1)
+ out <- t(c(mean, ll, ul))
+ colnames(out) <- c("Posterior mean", "LL", "UL")
  rownames(out) <- ""
  return(out)
 }
@@ -1424,7 +1581,7 @@ pi.cor <- function(alpha, cor, n0, n) {
 #' partial correlation is equal to some specified nonzero value. Set s = 0 
 #' for a Pearson correlation. The hypothesis testing results should be 
 #' accompanied with a confidence interval for the population Pearson or
-#' partial correlation value.
+#' partial correlation value ((see \link[statpsych]{ci.cor}).
 #'
 #'
 #' @param  cor     estimated correlation 
@@ -1440,9 +1597,6 @@ pi.cor <- function(alpha, cor, n0, n) {
 #' * p - two-sided p-value
 #'
 #'
-#' @seealso \link[statpsych]{ci.cor}
-#' 
-#' 
 #' @examples
 #' test.cor(.484, 100, 0, .2)
 #'
@@ -1495,7 +1649,7 @@ test.cor <- function(cor, n, s, h) {
 #' for a test of the null hypothesis that a Spearman correlation is equal to
 #' some specified nonzero value. The hypothesis testing results should be 
 #' accompanied with a confidence interval for the population Spearman
-#' correlation value.
+#' correlation value (see \link[statpsych]{ci.spear}).
 #'
 #'
 #' @param  cor     estimated correlation 
@@ -1510,9 +1664,6 @@ test.cor <- function(cor, n, s, h) {
 #' * p - two-sided p-value
 #'
 #'
-#' @seealso \link[statpsych]{ci.spear}
-#' 
-#' 
 #' @examples
 #' test.spear(.471, .2, 100)
 #'
@@ -1563,7 +1714,8 @@ test.spear <- function(cor, h, n) {
 #' Computes a z test for a difference of population Pearson or partial 
 #' correlations in a 2-group design. Set s = 0 for a Pearson correlation. 
 #' The hypothesis testing results should be accompanied with a confidence 
-#' interval for the difference in population correlation values.
+#' interval for the difference in population correlation values 
+#' (see \link[statpsych]{ci.cor2}).
 #'
 #'
 #' @param  cor1    estimated correlation for group 1
@@ -1580,9 +1732,6 @@ test.spear <- function(cor, h, n) {
 #' * p - two-sided p-value
 #'
 #'
-#' @seealso \link[statpsych]{ci.cor2}
-#' 
-#' 
 #' @examples
 #' test.cor2(.684, .437, 100, 125, 0)
 #'
@@ -1622,7 +1771,7 @@ test.cor2 <- function(cor1, cor2, n1, n2, s) {
 #' 2-group design. The test statistic uses a Bonett-Wright standard error for 
 #' each Spearman correlation. The hypothesis testing results should be 
 #' accompanied with a confidence interval for a difference in population 
-#' Spearman correlation values.
+#' Spearman correlation values (see \link[statpsych]{ci.spear2}).
 #'
 #'
 #' @param  cor1    estimated Spearman correlation for group 1
@@ -1638,9 +1787,6 @@ test.cor2 <- function(cor1, cor2, n1, n2, s) {
 #' * p - two-sided p-value
 #'
 #'
-#' @seealso \link[statpsych]{ci.spear2}
-#' 
-#' 
 #' @references
 #' \insertRef{Bonett2000}{statpsych}
 #'
@@ -2018,8 +2164,8 @@ size.ci.condmean <- function(alpha, evar, xvar, diff, w) {
 #' @export  
 size.ci.lc.ancova <- function(alpha, evar, s, d, w, v) {
  z <- qnorm(1 - alpha/2)
- k <- length(v)
- n <- ceiling(4*evar*(1 + d^2/4)*(t(v)%*%v)*(z/w)^2 + s + z^2/(2*k))
+ m <- length(v) - sum(v == 0)
+ n <- ceiling(4*evar*(1 + d^2/4)*(t(v)%*%v)*(z/w)^2 + s + z^2/(2*m))
  out <- matrix(n, nrow = 1, ncol = 1)
  colnames(out) <- "Sample size per group"
  rownames(out) <- ""
@@ -2312,7 +2458,7 @@ size.ci.spear2 <- function(alpha, cor1, cor2, w) {
 #' the planned study. In a typical sample size analysis, this type of 
 #' information is not available, and the researcher must use expert opinion to 
 #' guess the value of the Pearson correlation that will be observed in the 
-#' planned study. The \link[statpsych]{size.ci.cor}) function uses a 
+#' planned study. The \link[statpsych]{size.ci.cor} function uses a 
 #' correlation planning value that is based on expert opinion regarding the 
 #' likely value of the correlation estimate that will be observed in the 
 #' planned study.
@@ -2353,7 +2499,7 @@ size.ci.cor.prior <- function(alpha1, alpha2, cor0, n0, w) {
    if (abs(ll0) < abs(ul0)) {cor = ll0}
    if (abs(ll0) > abs(ul0)) {cor = ul0}
    n <- size.ci.cor(alpha1, cor, 0, w)
-   pi <- pi.cor(alpha2, cor0, n0, n)
+   pi <- pi.cor(alpha2, cor0, n0, n, type = 1)
    ll <- pi[1,1]                                  
    ul <- pi[1,2]
    if (ll < 0 & ul > 0) {
@@ -2363,7 +2509,7 @@ size.ci.cor.prior <- function(alpha1, alpha2, cor0, n0, w) {
      if (abs(ll) < abs(ul)) {cor = ll}
      if (abs(ll) > abs(ul)) {cor = ul}
      n <- size.ci.cor(alpha1, cor, 0, w)
-	 pi <- pi.cor(alpha2, cor0, n0, n)
+	 pi <- pi.cor(alpha2, cor0, n0, n, type = 1)
      ll <- pi[1,1]                                  
      ul <- pi[1,2]
 	 if (abs(ll) < abs(ul)) {cor = ll}
@@ -2371,6 +2517,109 @@ size.ci.cor.prior <- function(alpha1, alpha2, cor0, n0, w) {
      n <- size.ci.cor(alpha1, cor, 0, w)
    }
  }	 
+ out <- matrix(n, nrow = 1, ncol = 1)
+ colnames(out) <- "Sample size"
+ rownames(out) <- ""
+ return(out)
+}
+
+
+#  size.ci.ancova2 =========================================================
+#' Sample size for a 2-group ANCOVA confidence interval
+#'
+#'
+#' @description
+#' Computes the sample size for each group required to estimate a mean 
+#' difference in a 2-group ANCOVA model with desired confidence interval 
+#' precision. In a nonexperimental design, the sample size is affected by 
+#' the magnitude of covariate mean differences across groups. The covariate
+#' mean differences can be approximated by specifying the largest 
+#' standardized covariate mean difference of all covariates. In an 
+#' experiment, this standardized mean difference should be set to 0. Set 
+#' the error variance planning value to the largest value within a 
+#' plausible range for a conservatively large sample size.
+#'
+#'  
+#' @param  alpha  alpha level for 1-alpha confidence
+#' @param  evar   planning value of within group (error) variance
+#' @param  s      number of covariates 
+#' @param  d      largest standardized mean difference of all covariates
+#' @param  w      desired confidence interval width
+#' @param  R      ratio of n2/n1
+#'
+#' 
+#' @return 
+#' Returns the required sample size for each group
+#' 
+#' 
+#' @examples
+#' size.ci.ancova2(.05, 1.37, 1, 0, 1.5, 1)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  21 21
+#'
+#' size.ci.ancova2(.05, 1.37, 1, 0, 1.5, 2)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  16 32
+#'
+#' size.ci.ancova2(.05, 1.37, 1, .75, 1.5, 1)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  24 24
+#'  
+#' 
+#' @importFrom stats qnorm
+#' @export  
+size.ci.ancova2 <- function(alpha, evar, s, d, w, R) {
+ z <- qnorm(1 - alpha/2)
+ n1 <- ceiling(4*evar*(1 + d^2/4)*(1 + 1/R)*(z/w)^2 + s + z^2/4)
+ n2 <- ceiling(R*n1)
+ out <- t(c(n1, n2))
+ colnames(out) <- c("n1", "n2")
+ rownames(out) <- ""
+ return(out)
+}
+
+
+#  size.ci.slope.gen ==========================================================
+#' Sample size for a slope confidence interval in a general statistical model  
+#'
+#'
+#' @description
+#' Computes the sample size required to estimate a slope coefficient with 
+#' desired confidence interval precision in any general statistical model. 
+#' This function requires a standard error estimate for the slope of interest 
+#' from a prior or pilot study and the sample size that was used in the prior 
+#' or pilot study. 
+#'
+#'  
+#' @param  alpha  alpha level for 1-alpha confidence
+#' @param  se     standard error of slope from prior/pilot study
+#' @param  n0     sample size used in prior/pilot study 
+#' @param  w      desired confidence interval width
+#'
+#' 
+#' @return 
+#' Returns the required sample size
+#' 
+#' 
+#' @examples
+#' size.ci.slope.gen(.05, 3.15, 50, 5)
+#'
+#' # Should return:
+#' #  Sample size
+#' #          305
+#'  
+#' 
+#' @importFrom stats qnorm
+#' @export  
+size.ci.slope.gen <- function(alpha, se, n0, w) {
+ z <- qnorm(1 - alpha/2)
+ n <- ceiling(4*n0*se^2*(z/w)^2)
  out <- matrix(n, nrow = 1, ncol = 1)
  colnames(out) <- "Sample size"
  rownames(out) <- ""
@@ -2531,16 +2780,17 @@ size.interval.cor <- function(alpha, pow, cor, s, h) {
 #'
 #'
 #' @description
-#' Computes the sample size required to test the equality of two population 
-#' Pearson or partial correlations with desired power in a 2-group design. 
-#' Set s = 0 for a Pearson correlation. 
+#' Computes the sample size required to test equality of two Pearson or partial
+#' correlation with desired power in a 2-group design. Set s = 0 for a Pearson 
+#' correlation. Set R = 1 for equal sample sizes.
 #'
 #'  
 #' @param  alpha   alpha level for hypothesis test
 #' @param  pow     desired power
-#' @param  cor1    planning value of correlation for group 1
-#' @param  cor2    planning value of correlation for group 2
+#' @param  cor1    planning value of correlation
+#' @param  cor2    planning value of correlation
 #' @param  s       number of control variables
+#' @param  R       n2/n1 ratio
 #'
 #' 
 #' @return 
@@ -2548,16 +2798,22 @@ size.interval.cor <- function(alpha, pow, cor, s, h) {
 #' 
 #' 
 #' @examples
-#' size.test.cor2(.05, .8, .4, .2, 0)
+#' size.test.cor2(.05, .8, .4, .2, 0, 1)
 #'
 #' # Should return:
-#' # Sample size per group
-#' #                   325
+#' #  n1  n2
+#' # 325 325
+#'
+#' size.test.cor2(.05, .8, .4, .2, 0, 2)
+#'
+#' # Should return:
+#' #  n1  n2
+#' # 245 490
 #'  
 #' 
 #' @importFrom stats qnorm
 #' @export  
-size.test.cor2 <- function(alpha, pow, cor1, cor2, s) {
+size.test.cor2 <- function(alpha, pow, cor1, cor2, s, R) {
  if (cor1 > .999 || cor1 < -.999) {stop("cor1 must be between -.999 and .999")}
  if (cor2 > .999 || cor2 < -.999) {stop("cor2 must be between -.999 and .999")}
  za <- qnorm(1 - alpha/2)
@@ -2565,9 +2821,10 @@ size.test.cor2 <- function(alpha, pow, cor1, cor2, s) {
  zr1 <- log((1 + cor1)/(1 - cor1))/2
  zr2 <- log((1 + cor2)/(1 - cor2))/2
  es <- zr1 - zr2
- n <- ceiling(2*(za + zb)^2/es^2 + s + 3)
- out <- matrix(n, nrow = 1, ncol = 1)
- colnames(out) <- "Sample size per group"
+ n1 <- ceiling((1 + 1/R)*(za + zb)^2/es^2 + s + 3)
+ n2 <- ceiling(R*n1)
+ out <- t(c(n1, n2))
+ colnames(out) <- c("n1", "n2")
  rownames(out) <- ""
  return(out)
 }
@@ -2608,7 +2865,7 @@ size.test.cor2 <- function(alpha, pow, cor1, cor2, s) {
 #'
 #' # Should return:
 #' # Sample size per group
-#' #                    47
+#' #                    46
 #'  
 #' 
 #' @importFrom stats qnorm
@@ -2616,8 +2873,8 @@ size.test.cor2 <- function(alpha, pow, cor1, cor2, s) {
 size.test.lc.ancova <- function(alpha, pow, evar, es, s, d, v) {
  za <- qnorm(1 - alpha/2)
  zb <- qnorm(pow)
- k <- length(v)
- n <- ceiling((evar*(1 + d^2/4)*t(v)%*%v)*(za + zb)^2/es^2 + s + za^2/k)
+ m <- length(v) - sum(v == 0)
+ n <- ceiling((evar*(1 + d^2/4)*t(v)%*%v)*(za + zb)^2/es^2 + s + za^2/(2*m))
  out <- matrix(n, nrow = 1, ncol = 1)
  colnames(out) <- "Sample size per group"
  rownames(out) <- ""
@@ -2669,6 +2926,115 @@ size.test.cronbach2 <- function(alpha, pow, rel1, rel2, r) {
  n <- ceiling((4*r/(r - 1))*(za + zb)^2/log(e)^2 + 2)
  out <- matrix(n, nrow = 1, ncol = 1)
  colnames(out) <- "Sample size per group"
+ rownames(out) <- ""
+ return(out)
+}
+
+
+#  size.test.ancova2 ==========================================================
+#' Sample size for a 2-group ANCOVA hypothesis test
+#'
+#'
+#' @description
+#' Computes the sample size for each group required to test a mean difference
+#' in an ANCOVA model with desired power in a 2-group design. In a 
+#' nonexperimental design, the sample size is affected by the magnitude of 
+#' covariate mean differences across groups. The covariate mean differences can
+#' be approximated by specifying the largest standardized covariate mean 
+#' difference across of all covariates. In an experiment, this standardized 
+#' mean difference is set to 0. Set the error variance planning value to the 
+#' largest value within a plausible range for a conservatively large sample 
+#' size.
+#'
+#'  
+#' @param  alpha   alpha level for hypothesis test
+#' @param  pow     desired power
+#' @param  evar    planning value of within-group (error) variance
+#' @param  es      planning value of mean difference
+#' @param  s       number of covariates 
+#' @param  d       largest standardized mean difference of all covariates
+#' @param  R       n2/n1 rartio
+#'
+#' 
+#' @return 
+#' Returns the required sample size for each group
+#' 
+#' 
+#' @examples
+#' size.test.ancova2(.05, .9, 1.37, .7, 1, 0, 1)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  61 61
+#'
+#' size.test.ancova2(.05, .9, 1.37, .7, 1, 0, 2)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  47 94
+#'
+#' size.test.ancova2(.05, .9, 1.37, .7, 1, .5, 1)
+#'
+#' # Should return:
+#' #  n1 n2
+#' #  65 65
+#'  
+#' 
+#' @importFrom stats qnorm
+#' @export
+size.test.ancova2 <- function(alpha, pow, evar, es, s, d, R) {
+ if (es == 0) {stop("effect size cannot be zero")}
+ za <- qnorm(1 - alpha/2)
+ zb <- qnorm(pow)
+ n1 <- ceiling((evar*(1 + d^2/4)*(1 + 1/R))*(za + zb)^2/es^2 + s + za^2/4)
+ n2 <- ceiling(R*n1)
+ out <- t(c(n1, n2))
+ colnames(out) <- c("n1", "n2")
+ rownames(out) <- ""
+ return(out)
+}
+
+
+#  size.test.slope.gen ========================================================
+#' Sample size for a slope hypothesis test in a general statistical model  
+#'
+#'
+#' @description
+#' Computes the sample size required to test a null hypothesis with desired
+#' power that a population slope coefficient in any general statistical is 
+#' equal to zero. This function requires a standard error estimate for the 
+#' slope of interest from a prior or pilot study and the sample size that was
+#' used in the prior or pilot study. 
+#'
+#'  
+#' @param  alpha  alpha level for 1-alpha confidence
+#' @param  pow    desired power
+#' @param  se     standard error of slope from prior/pilot study
+#' @param  n0     sample size used in prior/pilot study 
+#' @param  b      planning value of population slope
+#'
+#' 
+#' @return 
+#' Returns the required sample size
+#' 
+#' 
+#' @examples
+#' size.test.slope.gen(.05, .8, 3.15, 50, 5)
+#'
+#' # Should return:
+#' #  Sample size
+#' #          156
+#'  
+#' 
+#' @importFrom stats qnorm
+#' @export  
+size.test.slope.gen <- function(alpha, pow, se, n0, b) {
+ if (b == 0) {stop("slope planning value cannot be zero")}
+ za <- qnorm(1 - alpha/2)
+ zb <- qnorm(pow)
+ n <- ceiling(n0*se^2*(za + zb)^2/b^2)
+ out <- matrix(n, nrow = 1, ncol = 1)
+ colnames(out) <- "Sample size"
  rownames(out) <- ""
  return(out)
 }
@@ -2731,14 +3097,14 @@ power.cor <- function(alpha, n, cor, h, s) {
 #' @description
 #' Computes the approximate power of a test for equal population Pearson or
 #' partial correlations in a 2-group design for planned sample sizes. Set
-#' s = 0 for a Pearson correlation. 
+#' s = 0 for Pearson correlations. 
 #'
 #'
 #' @param  alpha  alpha level for hypothesis test 
 #' @param  n1     planned sample size for group 1
 #' @param  n2     planned sample size for group 2
 #' @param  cor1   planning value of correlation for group 1 
-#' @param  cor2   planning value of correlation for group 1 
+#' @param  cor2   planning value of correlation for group 2 
 #' @param  s      number of control variables
 #'
 #'
@@ -3078,7 +3444,7 @@ sim.ci.spear <- function(alpha, n, cor, dist1, dist2, rep) {
 #'                              
 #'
 #' @description
-#' Computes an adjusted standard error in a general linear model after one or 
+#' Computes adjusted standard errors in a general linear model after one or 
 #' more predictor variables with nonsignificant slopes have been dropped from 
 #' the model. The adjusted standard errors are then used to compute adjusted 
 #' t-values, p-values, and confidence intervals. The mean square error and
