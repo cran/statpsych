@@ -707,14 +707,6 @@
             UL
        23.9724
 
-# pi.var.upper returns valid matrix
-
-    Code
-      res
-    Output
-             UL
-       19.08182
-
 # ci.bayes.normal returns valid matrix
 
     Code
@@ -754,4 +746,36 @@
     Output
        Sample size
                 44
+
+# size.ci.cv example
+
+    Code
+      res
+    Output
+       Sample size
+                60
+
+# size.ci.median example
+
+    Code
+      res
+    Output
+       Sample size
+                64
+
+# size.ci.median2 example
+
+    Code
+      res
+    Output
+       n1 n2
+       72 72
+
+# size.ci.lc.median.bs example
+
+    Code
+      res
+    Output
+       Sample size per group
+                          51
 
